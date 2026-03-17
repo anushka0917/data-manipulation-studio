@@ -1,2 +1,6 @@
 Flask
 PyPDF2
+pikepdf
+reportlab
+Werkzeug
+gunicorn
