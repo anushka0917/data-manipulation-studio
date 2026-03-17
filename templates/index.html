@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Manipulation Studio</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  @keyframes bgMove {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(32px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes floatIcon {
+    0%,100% { transform:translateY(0); }
+    50%     { transform:translateY(-10px); }
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow:0 0 0 0 rgba(99,102,241,0.4); }
+    50%     { box-shadow:0 0 0 12px rgba(99,102,241,0); }
+  }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    background-size: 300% 300%;
+    animation: bgMove 12s ease infinite;
+    color: white;
+    min-height: 100vh;
+  }
+
+  body.light {
+    background: linear-gradient(135deg, #e0eafc, #cfdef3, #a8edea);
+  }
+
+  .hero {
+    text-align: center;
+    padding: 70px 20px 30px;
+  }
+
+  .badge-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.9);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .light .badge {
+    background: rgba(0,0,0,0.07);
+    color: #334155;
+    border-color: rgba(0,0,0,0.1);
+  }
+
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 54px);
+    font-weight: 800;
+    background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6, #fb923c);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 14px;
+    letter-spacing: -1px;
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: rgba(255,255,255,0.78);
+    max-width: 520px;
+    margin: 0 auto 24px;
+    line-height: 1.6;
+  }
+
+  .light .hero p { color: #334155; }
+
+  .theme-toggle {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 9px 22px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all .3s;
+    backdrop-filter: blur(10px);
+  }
+
+  .theme-toggle:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
+  }
+
+  .light .theme-toggle {
+    color: #334155;
+    border-color: rgba(0,0,0,0.2);
+    background: rgba(255,255,255,0.5);
+  }
+
+  .tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 24px 60px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.09);
+    backdrop-filter: blur(18px);
+    border-radius: 22px;
+    padding: 32px 24px 26px;
+    text-align: center;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s;
+    animation: fadeUp .6s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 130px; height: 130px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07), transparent 70%);
+    pointer-events: none;
+  }
+
+  .card:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+    border-color: rgba(255,255,255,0.35);
+  }
+
+  .light .card {
+    background: rgba(255,255,255,0.72);
+    border-color: rgba(100,150,255,0.25);
+  }
+
+  .card:nth-child(1) { animation-delay: .05s; }
+  .card:nth-child(2) { animation-delay: .12s; }
+  .card:nth-child(3) { animation-delay: .19s; }
+  .card:nth-child(4) { animation-delay: .26s; }
+  .card:nth-child(5) { animation-delay: .33s; }
+  .card:nth-child(6) { animation-delay: .40s; }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+  }
+
+  .tag-blue   { background:rgba(56,189,248,0.2);  color:#7dd3fc; border:1px solid rgba(56,189,248,0.3); }
+  .tag-pink   { background:rgba(244,114,182,0.2); color:#f9a8d4; border:1px solid rgba(244,114,182,0.3); }
+  .tag-green  { background:rgba(52,211,153,0.2);  color:#6ee7b7; border:1px solid rgba(52,211,153,0.3); }
+  .tag-amber  { background:rgba(251,191,36,0.2);  color:#fcd34d; border:1px solid rgba(251,191,36,0.3); }
+  .tag-purple { background:rgba(167,139,250,0.2); color:#c4b5fd; border:1px solid rgba(167,139,250,0.3); }
+  .tag-coral  { background:rgba(251,113,133,0.2); color:#fda4af; border:1px solid rgba(251,113,133,0.3); }
+
+  .icon {
+    font-size: 42px;
+    margin-bottom: 12px;
+    display: inline-block;
+    animation: floatIcon 3s ease-in-out infinite;
+  }
+
+  .card:nth-child(2) .icon { animation-delay: .3s; }
+  .card:nth-child(3) .icon { animation-delay: .6s; }
+  .card:nth-child(4) .icon { animation-delay: .9s; }
+  .card:nth-child(5) .icon { animation-delay: 1.2s; }
+  .card:nth-child(6) .icon { animation-delay: 1.5s; }
+
+  .card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px;
+  }
+
+  .light .card h3 { color: #1e293b; }
+
+  .card p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.55;
+    margin: 0 0 16px;
+  }
+
+  .light .card p { color: #475569; }
+
+  input[type="file"],
+  input[type="text"],
+  select {
+    width: 100%;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    color: white;
+    padding: 10px 12px;
+    font-size: 14px;
+    margin: 8px 0;
+    transition: border .2s;
+    cursor: pointer;
+  }
+
+  input[type="file"]:focus,
+  input[type="text"]:focus,
+  select:focus {
+    outline: none;
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.15);
+  }
+
+  .light input[type="file"],
+  .light input[type="text"],
+  .light select {
+    background: rgba(0,0,0,0.06);
+    color: #1e293b;
+    border-color: rgba(0,0,0,0.15);
+  }
+
+  select option { background: #302b63; color: white; }
+
+  input[type="text"]::placeholder { color: rgba(255,255,255,0.4); }
+  .light input[type="text"]::placeholder { color: #94a3b8; }
+
+  button[type="submit"] {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .25s, box-shadow .25s;
+    letter-spacing: .4px;
+    animation: pulse 2.5s infinite;
+  }
+
+  button[type="submit"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(99,102,241,0.45);
+    animation: none;
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .file-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+  }
+
+  .file-list li {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 6px;
+    text-align: left;
+  }
+
+  .light .file-list li {
+    background: rgba(0,0,0,0.05);
+    color: #334155;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #38bdf8, #818cf8, #ec4899);
+    border-radius: 6px;
+    transition: width 1s ease;
+  }
+
+  .result-box {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    text-align: left;
+    display: none;
+  }
+
+  .light .result-box {
+    background: rgba(0,0,0,0.04);
+    color: #334155;
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px;
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+  }
+
+  .light footer { color: #64748b; }
+</style>
+</head>
+<body id="wrap">
+
+<div class="hero">
+  <div class="badge-row">
+    <span class="badge">✦ PDF Tools</span>
+    <span class="badge">✦ Instant Processing</span>
+    <span class="badge">✦ Free &amp; Secure</span>
+  </div>
+  <h1>⚡ Data Manipulation Studio</h1>
+  <p>Transform your PDFs instantly — merge, split, compress, extract, rotate &amp; watermark with ease.</p>
+  <button class="theme-toggle" onclick="document.body.classList.toggle('light')">🌗 Toggle theme</button>
+</div>
+
+<div class="tools">
+
+  <!-- MERGE -->
+  <div class="card">
+    <span class="card-tag tag-blue">Combine</span>
+    <div class="icon">🔗</div>
+    <h3>Merge PDFs</h3>
+    <p>Combine multiple PDFs into one seamless document.</p>
+    <form action="/merge" method="post" enctype="multipart/form-data"
+          onsubmit="handleSubmit(event, 'merge-prog', 'merge-res', 'Merged successfully!')">
+      <input type="file" id="merge-input" accept=".pdf"
+       onchange="addMergeFiles(this)">
+      <ul class="file-list" id="merge-list"></ul>
+      <div class="progress-bar" id="merge-prog"><div class="progress-fill"></div></div>
+      <div class="result-box" id="merge-res"></div>
+      <button type="submit">Merge PDFs</button>
+    </form>
+  </div>
+
+  <!-- SPLIT -->
+  <div class="card">
+    <span class="card-tag tag-pink">Divide</span>
+    <div class="icon">✂️</div>
+    <h3>Split PDF</h3>
+    <p>Extract specific pages or split into individual files.</p>
+    <form action="/split" method="post" enctype="multipart/form-data"
+          onsubmit="handleSubmit(event, 'split-prog', 'split-res', 'Split successfully!')">
+      <input type="file" name="pdf" accept=".pdf" required>
+      <input type="text" name="range" placeholder="Pages e.g. 1,3,5-8 (blank = all)">
+      <div class="progress-bar" id="split-prog"><div class="progress-fill"></div></div>
+      <div class="result-box" id="split-res"></div>
+      <button type="submit">Split PDF</button>
+    </form>
+  </div>
+
+  <!-- COMPRESS -->
+  <div class="card">
+    <span class="card-tag tag-green">Optimize</span>
+    <div class="icon">📦</div>
+    <h3>Compress PDF</h3>
+    <p>Shrink file size while keeping quality sharp.</p>
+    <form action="/compress" method="post" enctype="multipart/form-data"
+          onsubmit="handleSubmit(event, 'comp-prog', 'comp-res', 'Compressed successfully!')">
+      <input type="file" name="pdf" accept=".pdf" required>
+      <select name="quality">
+        <option>High quality (less compression)</option>
+        <option selected>Balanced</option>
+        <option>Max compression</option>
+      </select>
+      <div class="progress-bar" id="comp-prog"><div class="progress-fill"></div></div>
+      <div class="result-box" id="comp-res"></div>
+      <button type="submit">Compress</button>
+    </form>
+  </div>
+
+  <!-- EXTRACT -->
+  <div class="card">
+    <span class="card-tag tag-amber">Read</span>
+    <div class="icon">📝</div>
+    <h3>Extract Text</h3>
+    <p>Pull all readable text from your PDF instantly.</p>
+    <form action="/extract" method="post" enctype="multipart/form-data"
+          onsubmit="handleSubmit(event, 'ext-prog', 'ext-res', 'Text extracted successfully!')">
+      <input type="file" name="pdf" accept=".pdf" required>
+      <select name="range">
+        <option>All pages</option>
+        <option>First page only</option>
+        <option>Custom range</option>
+      </select>
+      <div class="progress-bar" id="ext-prog"><div class="progress-fill"></div></div>
+      <div class="result-box" id="ext-res"></div>
+      <button type="submit">Extract Text</button>
+    </form>
+  </div>
+
+  <!-- ROTATE -->
+  <div class="card">
+    <span class="card-tag tag-purple">Orient</span>
+    <div class="icon">🔄</div>
+    <h3>Rotate Pages</h3>
+    <p>Fix orientation of any page or the entire document.</p>
+    <form action="/rotate" method="post" enctype="multipart/form-data"
+          onsubmit="handleSubmit(event, 'rot-prog', 'rot-res', 'Rotated successfully!')">
+      <input type="file" name="pdf" accept=".pdf" required>
+      <select name="angle">
+        <option>Rotate 90° clockwise</option>
+        <option>Rotate 90° counter-clockwise</option>
+        <option>Rotate 180°</option>
+      </select>
+      <input type="text" name="pages" placeholder="Pages: blank = all pages">
+      <div class="progress-bar" id="rot-prog"><div class="progress-fill"></div></div>
+      <div class="result-box" id="rot-res"></div>
+      <button type="submit">Rotate</button>
+    </form>
+  </div>
+
+  <!-- WATERMARK -->
+  <div class="card">
+    <span class="card-tag tag-coral">Protect</span>
+    <div class="icon">🔒</div>
+    <h3>Watermark PDF</h3>
+    <p>Add a custom text watermark to your document.</p>
+    <form action="/watermark" method="post" enctype="multipart/form-data"
+          onsubmit="handleSubmit(event, 'wm-prog', 'wm-res', 'Watermark applied successfully!')">
+      <input type="file" name="pdf" accept=".pdf" required>
+      <input type="text" name="text" placeholder="Watermark text e.g. CONFIDENTIAL">
+      <select name="position">
+        <option>Diagonal</option>
+        <option>Center</option>
+        <option>Top-right corner</option>
+      </select>
+      <div class="progress-bar" id="wm-prog"><div class="progress-fill"></div></div>
+      <div class="result-box" id="wm-res"></div>
+      <button type="submit">Add Watermark</button>
+    </form>
+  </div>
+
+</div>
+
+<footer>✨ Data Manipulation Studio &nbsp;·&nbsp; Fast, free &amp; secure PDF tools</footer>
+
+<script>
+let mergeFiles = [];
+function addMergeFiles(input){
+
+  const newFiles = Array.from(input.files);
+
+  newFiles.forEach(file => {
+    if(!mergeFiles.some(f => f.name === file.name && f.size === file.size)){
+      mergeFiles.push(file);
+    }
+  });
+
+  renderMergeList();
+  input.value = "";
+}
+
+function renderMergeList(){
+
+  const list = document.getElementById("merge-list");
+  list.innerHTML = "";
+
+  mergeFiles.forEach((file,index)=>{
+
+    const li = document.createElement("li");
+    li.textContent = "📄 " + file.name + " (" + (file.size/1024).toFixed(1) + " KB)";
+
+    const removeBtn = document.createElement("span");
+    removeBtn.textContent = " ✕";
+    removeBtn.style.cursor = "pointer";
+    removeBtn.style.float = "right";
+
+    removeBtn.onclick = ()=>{
+      mergeFiles.splice(index,1);
+      renderMergeList();
+    };
+
+    li.appendChild(removeBtn);
+    list.appendChild(li);
+
+  });
+
+}
+function showFiles(input, listId) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  list.innerHTML = '';
+  Array.from(input.files).forEach(f => {
+    const li = document.createElement('li');
+    li.textContent = '📄 ' + f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+    list.appendChild(li);
+  });
+}
+
+function handleSubmit(e, progId, resId, successMsg) {
+  e.preventDefault();
+
+  const form = e.target;
+  const bar = document.getElementById(progId);
+  const res = document.getElementById(resId);
+  const fill = bar.querySelector('.progress-fill');
+  const btn = form.querySelector('button[type="submit"]');
+
+  const fileInput = form.querySelector('input[type="file"]');
+
+// Special handling for merge
+if(form.action.includes("/merge")){
+  if(mergeFiles.length < 2){
+    res.style.display = 'block';
+    res.textContent = '⚠️ Please upload at least 2 PDFs to merge.';
+    return;
+  }
+}else{
+  if (!fileInput || !fileInput.files.length) {
+    res.style.display = 'block';
+    res.textContent = '⚠️ Please select a file first.';
+    return;
+  }
+}
+
+  // Show progress bar, disable button
+  bar.style.display = 'block';
+  res.style.display = 'none';
+  fill.style.width = '0';
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+  setTimeout(() => { fill.style.width = '75%'; }, 60);
+
+  let formData;
+
+if(form.action.includes("/merge")){
+  formData = new FormData();
+  mergeFiles.forEach(file=>{
+    formData.append("pdfs", file);
+  });
+}else{
+  formData = new FormData(form);
+}
+
+  fetch(form.action, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(data => {
+        throw new Error(data.error || 'Server returned an error.');
+      });
+    }
+
+    // Read filename from Content-Disposition
+    const disposition = response.headers.get('Content-Disposition');
+    let filename = 'download';
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition.split('filename=')[1].replace(/"/g, '').trim();
+    }
+
+    return response.blob().then(blob => ({ blob, filename }));
+  })
+  .then(({ blob, filename }) => {
+    // Complete progress bar
+    fill.style.width = '100%';
+
+    // Trigger real file download
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    // Show success
+    res.style.display = 'block';
+    res.textContent = '✅ ' + successMsg + ' Download started!';
+
+    // Reset button
+    btn.disabled = false;
+    btn.textContent = btn.textContent.replace('Processing...', successMsg.split(' ')[0]);
+  })
+  .catch(err => {
+    fill.style.width = '0';
+    bar.style.display = 'none';
+    res.style.display = 'block';
+    res.textContent = '❌ Error: ' + err.message;
+    btn.disabled = false;
+    btn.textContent = 'Try Again';
+  });
+}
+</script>
+</body>
+</html>
